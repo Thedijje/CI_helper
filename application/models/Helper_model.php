@@ -34,59 +34,65 @@ class Helper_model extends CI_Model {
 *	And Upload path for the file where you want to upload file.
 *	Make Sure Path where file is to be uploaded, exist and is writable
 *	All Failure message will be logged to log directory
+*	$key is the key index in case of multiple file upload
+* call the following function in foreach loop and the index will be $key 
+* in case you are uploading multiple files
 */
-	public function upload_file($path,$name){
-	
-	
+	public function upload_file($path,$name,$key=NULL){
+		$this->load->helper('string');
+		/*
+		Upload file helper function	
+		*/
 		if(!isset($path)){
 			/*
-			*	Need to set path like /directory/image/	
+			Need to set path like /directory/image/	
 			*/
 			log_message('error','Image upload path not defined');
 			return FALSE;
 		}
-
-
 		if(!isset($name)){
 			/*
-			*	name of input type file is missing
+			name of input type file is missing
 			*/
 			
 			log_message('error','File name not defined');
 			return false;
 		}
-		
-		if(!is_dir($path)){
-			return false;
-			log_message('error','Directory does not exit, please create directory and make it writable');
+		$target_dir =	$path;
+		$time			=	md5(base64_encode(time().random_string('alnum',5)));
+		if($key===NULL){
+			$target_file	=	$target_dir.$time."_".rand(0,10).".".strtolower(get_file_ext($_FILES[$name]["name"]));
+		}else{
+			$target_file	=	$target_dir.$time."_".rand(0,10).".".strtolower(get_file_ext($_FILES[$name]["name"][$key]));
 		}
+		$uploadOk = 1;
 
-		$target_dir 	=	$path;
-		$time			=	base64_encode(time().random_string('alnum',5));
-
-		/*
-		*	By Default, This function generate random filename based on current timestamp
-		*	and a random string and MD5 Hashing them along with original filename
-		*	Orignal Filename is trimmed just to prevent last 6 character including extention of file.
-		*	Random string is trimmed to keep 5-20 character and filename smaller
-		*/
-		$target_file	=	$target_dir.substr(md5($time.rand()),5,20)."_".str_replace(" ","-",substr(basename($_FILES[$name]["name"]),-6));
-	
-			if($_FILES[$name]) {
-				
-				if (move_uploaded_file($_FILES[$name]["tmp_name"], $target_file)) {
-					return $target_file;
-				}else {
-					log_message('error','Directory does not exist or not writable, please create directory or defined valid path in first argument');
-					return FALSE;
-				}
-				
+		if($_FILES[$name]){
+			if($key===NULL){
+				$origin_path 	=	$_FILES[$name]["tmp_name"];
 			}else{
-			log_message('error','File not found in request body, please check if form has attribute enctype=multipart/form-data');
-			return FALSE;
+				$origin_path 	=	$_FILES[$name]["tmp_name"][$key];
 			}
-		
+			
+
+			if (move_uploaded_file($origin_path, $target_file)) {
+				
+				if(ENV == 'development'){
+					$target_file = img_to_jpg($target_file);
+				}
+				return $target_file;
+			}else {
+				
+				log_message('error','Directory does not exist, please create directory or defined valid path in first argument');
+				return FALSE;
+			}
+				
+		}else{
+			log_message('error','File not found, please check if form has attribute enctype=multipart/form-data');
+			return FALSE;
+		}
 	}
+
 
 
 
@@ -165,9 +171,12 @@ class Helper_model extends CI_Model {
 *	message: it can be simple text, html or complete view of html
 *	it will return true when email function runs successfully, else false
 *	more details will be visible in error log 
-*
+* if $attachment null only text mail sent
+*	if $attachment is file path that file willbe sent
+* if $attachment is array of multiple files multiple files will be sent 
+* as an attachment
 */
-	public function send_formatted_mail($data){
+	public function send_formatted_mail($data,$attachment=NULL){
 		$this->load->library('email');
 		$this->email->clear();
 		
@@ -206,9 +215,18 @@ class Helper_model extends CI_Model {
 		$this->email->from($data['from'], $data['name']);
 		$this->email->subject($data['subject']);
 		$this->email->message($data['message']);
-		$mail = $this->email->send();
+
+		if($attachment!=NULL){
+			if(!is_array($attachment)){
+				$this->email->attach(FCPATH.$attachment);
+			}else{
+				foreach($attachment as $key => $attach){
+					$this->email->attach(FCPATH.$attach);
+				}
+			}
+		}
 		
-		if($mail){
+		if($mail = $this->email->send()){
 			log_message('error','Message sent to :'.$data['to']);
 			return TRUE;
 		}else{

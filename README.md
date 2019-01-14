@@ -84,11 +84,12 @@ Database structure : `id(INT)`,`type(VARCHAR)`,`name(VARCHAR)`,`value(VARCHAR)`
 #### upload_file
 
 **Call**  
-`$this->lib->upload_file($path,$name);`  
+`$this->lib->upload_file($path,$name,$key=NULL);`  
 
 **Arguments**  
-`(string) $path` : Path where files to be saved/moved example : *static/files/uploaded/*  
-`(string) $name` : Name of the $_FILE variable from where file to be picked.  
+`(string) $path`: Path where files to be saved/moved example : *static/files/uploaded/*  
+`(string) $name`: Name of the $_FILE variable from where file to be picked.  
+`(index) 	$key` : Index in case of multiple file.  
 
 **Usage**  
 ```
@@ -140,15 +141,18 @@ $this->lib->alert_message();
 
 #### send_formatted_mail
 **Call**  
-`$this->lib->send_formatted_mail($email_data);`  
+`$this->lib->send_formatted_mail($data,$attachment=NULL);`  
 
 **Arguments**  
-`(array) $mail_data`: Consist of following values  
+`(array) data`: Consist of following values  
 
 - `(string) from` : Valid email address to send email from  
-- `(string) to` : Valid email address to send mail to  
+- `(string) to` 	: Valid email address to send mail to  
 - `(string) subject` : Valid string for email subject  
-- `(string) message` : Text/HTML content to be send in email   
+- `(string) message` : Text/HTML content to be send in email 
+
+`(string) $attachment`: Upload signle file
+`(array) $attachment`	: Upload multiple file
 
 **Usage**  
 ```
@@ -157,7 +161,7 @@ $data['to']	=	'awesomeuser@example.com';
 $data['subject']=	'Welcome to CI HELPER Model';
 $data['message']=	$this->load->view('email/hello_teplate',$content,TRUE);
 
-$this->lib->send_formatted_mail($data);
+$this->lib->send_formatted_mail($data,$attachment=NULL);
 ```
 
 
@@ -195,5 +199,6 @@ $this->lib->image_resize('static/upload/profile_image/user.jpg',250,250);
 |	8	|	count_data	|	$this->lib->count_data($table,$col,$val)	|	Quickly Get num row value based on condition on table 	|
 |	9	|	 count_multiple	|	$this->lib->count_multiple($table,$condition)	|	Get num row of table or condition on it 	|
 | 10	|	search	|	$this->lib->search($table,$query_text,$attributes)	|	Search from table using query and list of col to search for 	|
-
+|	11	|	upload_file 	|	$this->lib->upload_file($path,$name,$key=NULL)	|	Upload multiple files in the $path specified |
+|	12	|	send_formatted_mail 	|	$this->lib->send_formatted_mail($data,$attachment=NULL)	|	Send mail with attachment/attachments |
 
