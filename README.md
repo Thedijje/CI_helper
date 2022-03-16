@@ -8,6 +8,7 @@
  this includes codeigniter universal helper files
 
  ## What is CI helper for?
+ 
  Codeigniter is no doubt really great framework to get your work done with less and less mess. All you have to do is focus on your App and don't re-invent wheel.
  However 
  While working with CI, i felt lots of thing while writing model, i need to repeat again and again
